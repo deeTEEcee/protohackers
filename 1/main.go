@@ -44,7 +44,6 @@ func handleConnection(conn net.Conn) {
 		if _, err = conn.Write(responseBytes); err != nil {
 			fmt.Printf("Error writing: %v", err)
 		}
-		fmt.Println("Finished writing")
 		if !ok {
 			fmt.Println("Malformed response. Closing connection")
 			if err := conn.Close(); err != nil {
@@ -55,14 +54,19 @@ func handleConnection(conn net.Conn) {
 }
 
 func isPrime(n int) bool {
-	if n < 2 {
+	// This needs to be optimized. A slow approach may timeout.
+	if n <= 3 {
+		return n > 1
+	} else if n%2 == 0 || n%3 == 0 {
 		return false
 	}
-	for i := 2; i <= n/2; i++ {
-		if n%i == 0 {
+
+	for i := 5; i*i <= n; i += 6 {
+		if n%i == 0 || n%(i+2) == 0 {
 			return false
 		}
 	}
+
 	return true
 }
 
