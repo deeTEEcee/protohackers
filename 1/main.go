@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -29,29 +30,27 @@ func handleConnection(conn net.Conn) {
 		}
 	}()
 
-	buffer := make([]byte, 1024)
 	for {
 		var err error
-		fmt.Println("Reading...")
-		n, err := conn.Read(buffer)
-		if err != nil {
-			fmt.Println("Error reading:", err)
-			return
-		}
-		if n == 0 {
-			return
-		}
-		fmt.Printf("Received: %s\n", buffer[:n])
-		responseBytes, ok := process(buffer[:n])
-		fmt.Printf("About to write: %s\n", responseBytes)
-		if _, err = conn.Write(responseBytes); err != nil {
-			fmt.Printf("Error writing: %v", err)
-		}
-		fmt.Println("Finished writing")
-		if !ok {
-			fmt.Println("Malformed response. Closing connection")
-			if err := conn.Close(); err != nil {
-				fmt.Println("Error closing")
+		scanner := bufio.NewScanner(conn)
+		for scanner.Scan() {
+			in := scanner.Bytes()
+			if err != nil {
+				fmt.Println("Error reading:", err)
+				return
+			}
+			fmt.Printf("Received: %s\n", in)
+			responseBytes, ok := process(in)
+			fmt.Printf("About to write: %s\n", responseBytes)
+			if _, err = conn.Write(responseBytes); err != nil {
+				fmt.Printf("Error writing: %v", err)
+			}
+			fmt.Println("Finished writing")
+			if !ok {
+				fmt.Println("Malformed response. Closing connection")
+				if err := conn.Close(); err != nil {
+					fmt.Println("Error closing")
+				}
 			}
 		}
 	}
