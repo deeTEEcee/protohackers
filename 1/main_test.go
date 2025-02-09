@@ -5,11 +5,6 @@ import (
 	"testing"
 )
 
-func isMalformed(contents []byte) bool {
-
-	return false
-}
-
 func TestProcessSuccess(t *testing.T) {
 	var err error
 	reqMap := make(map[string]interface{})

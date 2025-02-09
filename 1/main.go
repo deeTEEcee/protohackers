@@ -39,6 +39,7 @@ func handleConnection(conn net.Conn) {
 		}
 		fmt.Printf("Received: %s\n", in)
 		responseBytes, ok := process(in)
+		responseBytes = append(responseBytes, byte('\n'))
 		fmt.Printf("About to write: %s\n", responseBytes)
 		if _, err = conn.Write(responseBytes); err != nil {
 			fmt.Printf("Error writing: %v", err)
@@ -81,7 +82,7 @@ func process(requestBytes []byte) ([]byte, bool) {
 }
 
 func main() {
-	listener, err := net.Listen("tcp", "0.0.0.0:8080")
+	listener, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		fmt.Println("Error listening:", err)
 		os.Exit(1)
