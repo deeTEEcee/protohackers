@@ -2,26 +2,27 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 )
 
 func TestProcessSuccess(t *testing.T) {
-	var err error
-	reqMap := make(map[string]interface{})
-	reqMap["method"] = "isPrime"
-	reqMap["number"] = 123
-	request, err := json.Marshal(reqMap)
-	responseBytes, ok := process(request)
-	if !ok {
-		t.Errorf("Should've succeeded but failed with %s. Err: %s", responseBytes, err)
-	}
-	var response Response
-	err = json.Unmarshal(responseBytes, &response)
-	if response.Method != "isPrime" {
-		t.Errorf("Method name '%s' is wrong", response.Method)
-	}
-	if response.IsPrime {
-		t.Errorf("%d is not a prime", 123)
+	testCases := []string{"123", "831050031731332686615785686093033851414852892480591954828", "1.0"}
+	for _, num := range testCases {
+		var err error
+		request := fmt.Sprintf("{\"method\":\"isPrime\",\"number\":%s}", num)
+		responseBytes, ok := process([]byte(request))
+		if !ok {
+			t.Errorf("Should've succeeded but failed with '%s'. Response info: %s, %s", request, responseBytes, err)
+		}
+		var response Response
+		err = json.Unmarshal(responseBytes, &response)
+		if response.Method != "isPrime" {
+			t.Errorf("Method name '%s' is wrong", response.Method)
+		}
+		if response.IsPrime {
+			t.Errorf("%s is not a prime", num)
+		}
 	}
 }
 

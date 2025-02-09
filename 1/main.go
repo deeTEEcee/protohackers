@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net"
 	"os"
 )
@@ -13,8 +14,8 @@ func isValid(req Request) bool {
 }
 
 type Request struct {
-	Method *string `json:"method"`
-	Number *int    `json:"number"`
+	Method *string  `json:"method"`
+	Number *float64 `json:"number"`
 }
 
 type Response struct {
@@ -58,7 +59,6 @@ func isPrime(n int) bool {
 	} else if n%2 == 0 || n%3 == 0 {
 		return false
 	}
-
 	for i := 5; i*i <= n; i += 6 {
 		if n%i == 0 || n%(i+2) == 0 {
 			return false
@@ -73,11 +73,13 @@ func process(requestBytes []byte) ([]byte, bool) {
 	var request Request
 	err := json.Unmarshal(requestBytes, &request)
 	if err == nil && isValid(request) {
-		response := Response{Method: "isPrime", IsPrime: isPrime(*request.Number)}
+		num := *request.Number
+		response := Response{Method: "isPrime", IsPrime: num == math.Trunc(num) && isPrime(int(num))}
 		var responseBytes []byte
 		responseBytes, err = json.Marshal(response)
 		return responseBytes, true
 	} else {
+		fmt.Printf("Req error occurred %s\n", err)
 		malformed := []byte("p")
 		return malformed, false
 	}
