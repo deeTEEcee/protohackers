@@ -45,10 +45,8 @@ func handleConnection(conn net.Conn) {
 			fmt.Printf("Error writing: %v", err)
 		}
 		if !ok {
-			fmt.Println("Malformed response. Closing connection")
-			if err := conn.Close(); err != nil {
-				fmt.Println("Error closing")
-			}
+			fmt.Println("Malformed response. Breaking out of infinite loop.")
+			break
 		}
 	}
 }
