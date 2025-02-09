@@ -38,12 +38,16 @@ func handleConnection(conn net.Conn) {
 		}
 		if n == 0 {
 			return
-		} // {"number":-2,"method":"isPrime"}
+		}
 		fmt.Printf("Received: %s\n", buffer[:n])
-		responseBytes, _ := process(buffer[:n])
+		responseBytes, ok := process(buffer[:n])
 		fmt.Printf("About to write: %s\n", responseBytes)
 		conn.Write(responseBytes)
 		fmt.Println("Finished writing")
+		if !ok {
+			fmt.Println("Malformed response. Closing connection")
+			conn.Close()
+		}
 	}
 }
 
