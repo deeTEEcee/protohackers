@@ -37,10 +37,12 @@ func handleConnection(conn net.Conn) {
 		}
 		if n == 0 {
 			return
-		}
-		fmt.Printf("Received: %s", buffer[:n])
+		} // {"number":-2,"method":"isPrime"}
+		fmt.Printf("Received: %s\n", buffer[:n])
 		responseBytes, _ := process(buffer[:n])
+		fmt.Printf("About to write: %s\n", responseBytes)
 		conn.Write(responseBytes)
+		fmt.Println("Finished writing")
 	}
 }
 
