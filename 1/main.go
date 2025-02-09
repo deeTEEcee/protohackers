@@ -9,7 +9,7 @@ import (
 )
 
 func isValid(req Request) bool {
-	return *req.Method == "isPrime" && req.Number != nil
+	return req.Method != nil && *req.Method == "isPrime" && req.Number != nil
 }
 
 type Request struct {
