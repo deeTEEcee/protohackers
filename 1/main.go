@@ -75,7 +75,7 @@ func process(requestBytes []byte) ([]byte, bool) {
 		responseBytes, err = json.Marshal(response)
 		return responseBytes, true
 	} else {
-		malformed := make([]byte, 4)
+		malformed := []byte("p")
 		return malformed, false
 	}
 }
