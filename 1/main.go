@@ -24,7 +24,9 @@ type Response struct {
 func handleConnection(conn net.Conn) {
 	defer func() {
 		fmt.Println("Closing connection")
-		conn.Close()
+		if err := conn.Close(); err != nil {
+			fmt.Println("Error closing")
+		}
 	}()
 
 	buffer := make([]byte, 1024)
@@ -42,11 +44,15 @@ func handleConnection(conn net.Conn) {
 		fmt.Printf("Received: %s\n", buffer[:n])
 		responseBytes, ok := process(buffer[:n])
 		fmt.Printf("About to write: %s\n", responseBytes)
-		conn.Write(responseBytes)
+		if _, err = conn.Write(responseBytes); err != nil {
+			fmt.Printf("Error writing: %v", err)
+		}
 		fmt.Println("Finished writing")
 		if !ok {
 			fmt.Println("Malformed response. Closing connection")
-			conn.Close()
+			if err := conn.Close(); err != nil {
+				fmt.Println("Error closing")
+			}
 		}
 	}
 }
