@@ -13,6 +13,7 @@ func isValid(req Request) bool {
 	return req.Method != nil && *req.Method == "isPrime" && req.Number != nil
 }
 
+// By default, extra params in json are allowed
 type Request struct {
 	Method *string  `json:"method"`
 	Number *float64 `json:"number"`
