@@ -139,49 +139,62 @@ func handleConnection(conn net.Conn) {
 	buf := make([]byte, 9)
 	store := make([]InsertMessage, 0)
 	for {
-		// TODO: Create a local test for tcp server to deal with difference between io.ReadFull
-		// and conn.Read(buf)
-		_, err := io.ReadFull(conn, buf)
+		err := runOnce(conn, buf, &store)
 		if err != nil {
-			fmt.Println("Error reading:", err)
 			return
-		}
-		fieldOne := int32(binary.BigEndian.Uint32(buf[1:5]))
-		fieldTwo := int32(binary.BigEndian.Uint32(buf[5:]))
-
-		switch buf[0] {
-		case 'I':
-			//var msg InsertMessage
-			//err = binary.Read(bytes.NewBuffer(buf[1:]), binary.BigEndian, &msg)
-			//if err != nil {
-			//	fmt.Println("Error doing binary read:", err)
-			//}
-			insert(&store, fieldOne, fieldTwo)
-		case 'Q':
-			//var msg QueryMessage
-			var avg float64
-			//err = binary.Read(bytes.NewBuffer(buf[1:]), binary.BigEndian, &msg)
-			//if err != nil {
-			//	fmt.Println("Error doing binary read:", err)
-			//}
-			avg = query(store, fieldOne, fieldTwo)
-			fmt.Printf("Sending %d\n", int32(avg))
-
-			// Make sure we send 4 bytes.
-			// Unsigned int32 is same binary rep as uint32?
-			output := make([]byte, 4)
-			binary.BigEndian.PutUint32(output, uint32(avg))
-			_, err = conn.Write(output)
-			if err != nil {
-				fmt.Println("Error writing:", err)
-				return
-			}
 		}
 	}
 }
 
-func main() {
-	listener, err := net.Listen("tcp", ":8080")
+type ReadWriteConn interface {
+	Read(b []byte) (n int, err error)
+	Write(b []byte) (n int, err error)
+}
+
+func runOnce(conn ReadWriteConn, buf []byte, store *[]InsertMessage) error {
+	// TODO: Create a local test for tcp server to deal with difference between io.ReadFull
+	//_, err := conn.Read(buf)
+	_, err := io.ReadFull(conn, buf)
+	if err != nil {
+		fmt.Println("Error reading:", err)
+		return err
+	}
+	fieldOne := int32(binary.BigEndian.Uint32(buf[1:5]))
+	fieldTwo := int32(binary.BigEndian.Uint32(buf[5:]))
+
+	switch buf[0] {
+	case 'I':
+		//var msg InsertMessage
+		//err = binary.Read(bytes.NewBuffer(buf[1:]), binary.BigEndian, &msg)
+		//if err != nil {
+		//	fmt.Println("Error doing binary read:", err)
+		//}
+		insert(store, fieldOne, fieldTwo)
+	case 'Q':
+		//var msg QueryMessage
+		var avg float64
+		//err = binary.Read(bytes.NewBuffer(buf[1:]), binary.BigEndian, &msg)
+		//if err != nil {
+		//	fmt.Println("Error doing binary read:", err)
+		//}
+		avg = query(*store, fieldOne, fieldTwo)
+		fmt.Printf("Sending %d\n", int32(avg))
+
+		// Make sure we send 4 bytes.
+		// Unsigned int32 is same binary rep as uint32?
+		output := make([]byte, 4)
+		binary.BigEndian.PutUint32(output, uint32(avg))
+		_, err = conn.Write(output)
+		if err != nil {
+			fmt.Println("Error writing:", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func startServer(address string) {
+	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		fmt.Println("Error listening:", err)
 		os.Exit(1)
@@ -191,11 +204,15 @@ func main() {
 	fmt.Println("Server listening on :8080")
 
 	for {
-		conn, err := listener.Accept()
+		client, err := listener.Accept()
 		if err != nil {
 			fmt.Println("Error accepting:", err)
 			continue
 		}
-		go handleConnection(conn)
+		go handleConnection(client)
 	}
+}
+
+func main() {
+	startServer(":8080")
 }
