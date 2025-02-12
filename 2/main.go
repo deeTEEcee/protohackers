@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"cmp"
 	"encoding/binary"
 	"fmt"
@@ -8,6 +9,8 @@ import (
 	"net"
 	"os"
 	"slices"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -119,14 +122,15 @@ func query(store []InsertMessage, minTs int32, maxTs int32) float64 {
 	}
 	minIndex := findMinIndex(store, int(minTs), getter)
 	maxIndex := findMaxIndex(store, int(maxTs), getter)
-	var total int32 = 0
-	var count int32 = 0
+	var total = 0
+	var count = 0
 	for i := minIndex; i <= maxIndex; i++ {
 		// Need this duplicate condition check because findIndex gets closest numbers,
 		// allowing for flexible queries.
 		if store[i].Timestamp >= minTs && store[i].Timestamp <= maxTs {
-			total += store[i].Price
+			total += int(store[i].Price)
 			count += 1
+			fmt.Printf("%d - price:%d, total %d\n", store[i].Timestamp, store[i].Price, total)
 		}
 	}
 	if count == 0 {
@@ -194,21 +198,66 @@ func handleConnection(conn net.Conn) {
 }
 
 func main() {
-	listener, err := net.Listen("tcp", ":8080")
+	file, err := os.Open("debug.log")
 	if err != nil {
-		fmt.Println("Error listening:", err)
-		os.Exit(1)
+		fmt.Println("Error opening file:", err)
+		return
 	}
-	defer listener.Close()
+	defer file.Close()
 
-	fmt.Println("Server listening on :8080")
-
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			fmt.Println("Error accepting:", err)
-			continue
+	scanner := bufio.NewScanner(file)
+	count := 0
+	ncount := 0
+	zcount := 0
+	store := make([]InsertMessage, 0)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Split(line, " ")
+		if len(parts) != 2 {
+			fmt.Println("Error: Invalid input format")
+			return
 		}
-		go handleConnection(conn)
+
+		num1, _ := strconv.Atoi(parts[0])
+		num2, _ := strconv.Atoi(parts[1])
+		insert(&store, int32(num1), int32(num2))
+		//query(store, 1069623031, 1076594785)
+
+		if num2 > 0 {
+			count++
+		} else if num2 == 0 {
+			zcount++
+		} else {
+			ncount++
+		}
+		fmt.Println(line) // Process each line here
+	}
+	fmt.Printf("Positive %d\n", count)
+	fmt.Printf("Negative %d\n", ncount)
+	fmt.Printf("Zeroes %d\n", zcount)
+	query(store, 1069623031, 1076594785)
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Error reading file:", err)
 	}
 }
+
+//func main() {
+//	listener, err := net.Listen("tcp", ":8080")
+//	if err != nil {
+//		fmt.Println("Error listening:", err)
+//		os.Exit(1)
+//	}
+//	defer listener.Close()
+//
+//	fmt.Println("Server listening on :8080")
+//
+//	for {
+//		conn, err := listener.Accept()
+//		if err != nil {
+//			fmt.Println("Error accepting:", err)
+//			continue
+//		}
+//		go handleConnection(conn)
+//	}
+//}
