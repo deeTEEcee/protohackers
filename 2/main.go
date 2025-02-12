@@ -103,7 +103,7 @@ var getter = func(x InsertMessage) int { return int(x.Timestamp) }
 func query(store []InsertMessage, minTs int32, maxTs int32) float64 {
 	fmt.Printf("Querying %d %d\n", minTs, maxTs)
 	// Find the average price
-	if len(store) == 0 {
+	if len(store) == 0 || minTs > maxTs {
 		return 0.0
 	}
 	minIndex := findMinIndex(store, int(minTs), getter)

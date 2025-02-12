@@ -15,6 +15,15 @@ func TestProcess(t *testing.T) {
 	assert.Equal(t, 0.0, query(store, 10, 20))
 }
 
+func TestProcess2(t *testing.T) {
+	store := make([]InsertMessage, 0)
+	insert(&store, 12346, 0)
+	insert(&store, 12347, 0)
+	insert(&store, 40960, 0)
+	// Not sure what's expected but let's dot his.
+	assert.Equal(t, 0.0, query(store, 12288, 0))
+}
+
 func TestFindMinMax(t *testing.T) {
 	arr := []int{1, 5, 10, 18, 21}
 	assert.Equal(t, 1, findMinInt(arr, 0))
