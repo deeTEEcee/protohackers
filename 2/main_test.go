@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"testing"
+	"time"
 )
 
 func TestProcess(t *testing.T) {
@@ -83,29 +84,39 @@ func queryMsg(start int, end int) []byte {
 // Method 2: No mocks. Run the server and then send messages through the client.
 
 func TestClient(t *testing.T) {
-	address := "localhost:8081"
-	go startServer(address)
-	conn, _ := net.Dial("tcp", address)
-	buf := make([]byte, 4)
-	randBytes := make([]byte, 9)
-	var err error
-	conn.Write(insertMsg(0, 0))
-	conn.Write(insertMsg(5, 10))
-	rand.Read(randBytes)
-	randBytes[0] = 'X'    // Ensure this doesnt get processed
-	conn.Write(randBytes) // Add random bytes.
-	conn.Write(queryMsg(0, 10))
-	_, err = io.ReadFull(conn, buf)
-	assert.Equal(t, nil, err)
-	assert.Equal(t, int(binary.BigEndian.Uint32(buf)), 5)
+	timeout := time.After(5 * time.Second)
+	done := make(chan bool)
+	go func() {
+		address := "localhost:8081"
+		go startServer(address)
+		conn, _ := net.Dial("tcp", address)
+		buf := make([]byte, 4)
+		randBytes := make([]byte, 9)
+		var err error
+		conn.Write(insertMsg(0, 0))
+		conn.Write(insertMsg(5, 10))
+		rand.Read(randBytes)
+		randBytes[0] = 'X'    // Ensure this doesnt get processed
+		conn.Write(randBytes) // Add random bytes.
+		conn.Write(queryMsg(0, 10))
+		_, err = io.ReadFull(conn, buf)
+		assert.Equal(t, nil, err)
+		assert.Equal(t, int(binary.BigEndian.Uint32(buf)), 5)
 
-	// Do partial insert in multiple writes
-	partialInsert := insertMsg(10, 20)
-	conn.Write(partialInsert[:5])
-	conn.Write(partialInsert[5:])
-	conn.Write(queryMsg(0, 10))
-	_, err = io.ReadFull(conn, buf)
-	assert.Equal(t, nil, err)
-	assert.Equal(t, int(binary.BigEndian.Uint32(buf)), 10)
-
+		// Do partial insert in multiple writes
+		partialInsert := insertMsg(10, 20)
+		conn.Write(partialInsert[:5])
+		time.Sleep(1 * time.Second)
+		conn.Write(partialInsert[5:])
+		conn.Write(queryMsg(0, 10))
+		_, err = io.ReadFull(conn, buf)
+		assert.Equal(t, nil, err)
+		assert.Equal(t, int(binary.BigEndian.Uint32(buf)), 10)
+		done <- true
+	}()
+	select {
+	case <-timeout:
+		t.Fatal("Timeout (possibly due to partial insert byte read issues)")
+	case <-done:
+	}
 }

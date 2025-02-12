@@ -152,8 +152,6 @@ type ReadWriteConn interface {
 }
 
 func runOnce(conn ReadWriteConn, buf []byte, store *[]InsertMessage) error {
-	// TODO: Create a local test for tcp server to deal with difference between io.ReadFull
-	//_, err := conn.Read(buf)
 	_, err := io.ReadFull(conn, buf)
 	if err != nil {
 		fmt.Println("Error reading:", err)
