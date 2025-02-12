@@ -82,7 +82,8 @@ func queryMsg(start int, end int) []byte {
 
 // Method 1: Mock connection interface and write in a unit test manner.
 // Method 2: No mocks. Run the server and then send messages through the client.
-
+// If we used `conn.Read(buf)` instead of `io.ReadFull(conn, buf)`, this
+// test will timeout since it would hang.
 func TestClient(t *testing.T) {
 	timeout := time.After(5 * time.Second)
 	done := make(chan bool)
