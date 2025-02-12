@@ -31,35 +31,35 @@ func findMinIndex[T any](arr []T, target int, f func(T) int) int {
 	// Returns target or value less than target
 	lo := 0
 	hi := len(arr) - 1
-	smallest := 0
+	var smallest *int
 	for lo <= hi {
 		mid := (hi + lo) / 2
 		val := f(arr[mid])
 		if val > target {
 			hi = mid - 1
 		} else if val < target {
-			if lo > smallest {
-				smallest = lo
-			}
+			smallest = &mid
 			lo = mid + 1
 		} else {
 			return mid
 		}
 	}
-	return smallest
+	if smallest == nil {
+		return 0
+	} else {
+		return *smallest
+	}
 }
 
 func findMaxIndex[T any](arr []T, target int, f func(T) int) int {
 	lo := 0
 	hi := len(arr) - 1
-	largest := -1
+	var largest *int
 	for lo <= hi {
 		mid := (hi + lo) / 2
 		val := f(arr[mid])
 		if val > target {
-			if largest == -1 || hi < largest {
-				largest = hi
-			}
+			largest = &mid
 			hi = mid - 1
 		} else if val < target {
 			lo = mid + 1
@@ -67,7 +67,11 @@ func findMaxIndex[T any](arr []T, target int, f func(T) int) int {
 			return mid
 		}
 	}
-	return largest
+	if largest == nil {
+		return len(arr) - 1
+	} else {
+		return *largest
+	}
 }
 
 func findMinInt(arr []int, target int) int {
@@ -81,11 +85,7 @@ func findMinInt(arr []int, target int) int {
 
 func findMaxInt(arr []int, target int) int {
 	i := findMaxIndex(arr, target, func(x int) int { return x })
-	if i > len(arr) {
-		return -1
-	} else {
-		return arr[i]
-	}
+	return arr[i]
 }
 
 /*
