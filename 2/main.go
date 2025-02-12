@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"net"
 	"os"
 )
@@ -131,15 +132,14 @@ func handleConnection(conn net.Conn) {
 	buf := make([]byte, 9)
 	store := make([]InsertMessage, 0)
 	for {
-		n, err := conn.Read(buf)
+		// TODO: Create a local test for tcp server to deal with difference between io.ReadFull
+		// and conn.Read(buf)
+		_, err := io.ReadFull(conn, buf)
 		if err != nil {
 			fmt.Println("Error reading:", err)
 			return
 		}
-		if n == 0 {
-			return
-		}
-		fmt.Printf("Received: %s\n", buf[:n])
+		fmt.Printf("Received: %s\n", buf)
 
 		switch buf[0] {
 		case 'I':
