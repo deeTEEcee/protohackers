@@ -2,11 +2,13 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
 	"os"
+	"slices"
 )
 
 type InsertMessage struct {
@@ -91,15 +93,20 @@ func findMaxInt(arr []int, target int) int {
 Just use a sorted array, append, and try sort.searchInts to get something initially working. We can
 research performance after.
 */
+var getter = func(x InsertMessage) int { return int(x.Timestamp) }
+var compare = func(a, b InsertMessage) int {
+	return cmp.Compare(getter(a), getter(b))
+}
+
 func insert(store *[]InsertMessage, timestamp int32, price int32) {
-	fmt.Printf("Inserting %d %d", timestamp, price)
+	fmt.Printf("Inserting %d %d\n", timestamp, price)
 	msg := InsertMessage{timestamp, price}
 	*store = append(*store, msg)
 }
 
-var getter = func(x InsertMessage) int { return int(x.Timestamp) }
-
 func query(store []InsertMessage, minTs int32, maxTs int32) float64 {
+	// Do lazy sorting to improve on insert performance.
+	slices.SortFunc(store, compare)
 	fmt.Printf("Querying %d %d\n", minTs, maxTs)
 	// Find the average price
 	if len(store) == 0 || minTs > maxTs {
@@ -120,6 +127,7 @@ func query(store []InsertMessage, minTs int32, maxTs int32) float64 {
 	if count == 0 {
 		return 0.0
 	}
+	fmt.Printf("Size of store: %d, Calculation: %d/%d\n", len(store), total, count)
 	return float64(total) / float64(count)
 }
 
@@ -137,9 +145,10 @@ func handleConnection(conn net.Conn) {
 		_, err := io.ReadFull(conn, buf)
 		if err != nil {
 			fmt.Println("Error reading:", err)
+			//fmt.Printf("Print store contents: %v\n", store)
 			return
 		}
-		fmt.Printf("Received: %s\n", buf)
+		//fmt.Printf("Received: %s\n", buf)
 
 		switch buf[0] {
 		case 'I':

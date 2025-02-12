@@ -13,15 +13,19 @@ func TestProcess(t *testing.T) {
 	insert(&store, 5, 20)
 	assert.Equal(t, 60.0, query(store, 0, 20))
 	assert.Equal(t, 0.0, query(store, 10, 20))
+
+	// Bad input values
+	assert.Equal(t, 0.0, query(store, 12288, 0))
 }
 
-func TestProcess2(t *testing.T) {
+func TestProcessUnsorted(t *testing.T) {
 	store := make([]InsertMessage, 0)
-	insert(&store, 12346, 0)
-	insert(&store, 12347, 0)
-	insert(&store, 40960, 0)
-	// Not sure what's expected but let's dot his.
-	assert.Equal(t, 0.0, query(store, 12288, 0))
+	insert(&store, 0, 100)
+	insert(&store, 5, 20)
+	insert(&store, -2, 1)
+	insert(&store, -4, 5)
+	insert(&store, 10, 50)
+	assert.InDelta(t, 56.66, query(store, 0, 20), 0.1)
 }
 
 func TestFindMinMax(t *testing.T) {
