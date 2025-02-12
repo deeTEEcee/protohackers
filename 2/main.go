@@ -93,7 +93,7 @@ Just use a sorted array, append, and try sort.searchInts to get something initia
 research performance after.
 */
 func insert(store *[]InsertMessage, timestamp int32, price int32) {
-	//fmt.Printf("Inserting %d %d", timestamp, price)
+	fmt.Printf("Inserting %d %d", timestamp, price)
 	msg := InsertMessage{timestamp, price}
 	*store = append(*store, msg)
 }
@@ -101,7 +101,7 @@ func insert(store *[]InsertMessage, timestamp int32, price int32) {
 var getter = func(x InsertMessage) int { return int(x.Timestamp) }
 
 func query(store []InsertMessage, minTs int32, maxTs int32) float64 {
-	//fmt.Printf("Querying %d %d\n", minTs, maxTs)
+	fmt.Printf("Querying %d %d\n", minTs, maxTs)
 	// Find the average price
 	if len(store) == 0 {
 		return 0.0
