@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"cmp"
 	"encoding/binary"
 	"fmt"
@@ -145,21 +144,27 @@ func handleConnection(conn net.Conn) {
 		_, err := io.ReadFull(conn, buf)
 		if err != nil {
 			fmt.Println("Error reading:", err)
-			//fmt.Printf("Print store contents: %v\n", store)
 			return
 		}
-		//fmt.Printf("Received: %s\n", buf)
+		fieldOne := int32(binary.BigEndian.Uint32(buf[1:5]))
+		fieldTwo := int32(binary.BigEndian.Uint32(buf[5:]))
 
 		switch buf[0] {
 		case 'I':
-			var msg InsertMessage
-			err = binary.Read(bytes.NewBuffer(buf[1:]), binary.BigEndian, &msg)
-			insert(&store, msg.Timestamp, msg.Price)
+			//var msg InsertMessage
+			//err = binary.Read(bytes.NewBuffer(buf[1:]), binary.BigEndian, &msg)
+			//if err != nil {
+			//	fmt.Println("Error doing binary read:", err)
+			//}
+			insert(&store, fieldOne, fieldTwo)
 		case 'Q':
-			var msg QueryMessage
+			//var msg QueryMessage
 			var avg float64
-			err = binary.Read(bytes.NewBuffer(buf[1:]), binary.BigEndian, &msg)
-			avg = query(store, msg.MinTimestamp, msg.MaxTimestamp)
+			//err = binary.Read(bytes.NewBuffer(buf[1:]), binary.BigEndian, &msg)
+			//if err != nil {
+			//	fmt.Println("Error doing binary read:", err)
+			//}
+			avg = query(store, fieldOne, fieldTwo)
 			fmt.Printf("Sending %d\n", int32(avg))
 
 			// Make sure we send 4 bytes.
