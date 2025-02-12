@@ -4,10 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
-	"math"
 	"net"
 	"os"
-	"strconv"
 )
 
 type InsertMessage struct {
@@ -118,6 +116,9 @@ func query(store []InsertMessage, minTs int32, maxTs int32) float64 {
 			count += 1
 		}
 	}
+	if count == 0 {
+		return 0.0
+	}
 	return float64(total) / float64(count)
 }
 
@@ -150,14 +151,13 @@ func handleConnection(conn net.Conn) {
 			var avg float64
 			err = binary.Read(bytes.NewBuffer(buf[1:]), binary.BigEndian, &msg)
 			avg = query(store, msg.MinTimestamp, msg.MaxTimestamp)
-			var output string
-			if math.Trunc(avg) == avg {
-				output = strconv.FormatInt(int64(avg), 10)
-			} else {
-				output = strconv.FormatFloat(avg, 'f', -1, 32)
-			}
-			fmt.Printf("Sending %s\n", output)
-			_, err = conn.Write([]byte(output))
+			fmt.Printf("Sending %d\n", int32(avg))
+
+			// Make sure we send 4 bytes.
+			// Unsigned int32 is same binary rep as uint32?
+			output := make([]byte, 4)
+			binary.BigEndian.PutUint32(output, uint32(avg))
+			_, err = conn.Write(output)
 			if err != nil {
 				fmt.Println("Error writing:", err)
 				return
