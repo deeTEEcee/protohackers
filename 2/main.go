@@ -113,13 +113,13 @@ func query(store []InsertMessage, minTs int32, maxTs int32) float64 {
 	}
 	minIndex := findMinIndex(store, int(minTs), getter)
 	maxIndex := findMaxIndex(store, int(maxTs), getter)
-	var total int32 = 0
-	var count int32 = 0
+	var total = 0
+	var count = 0
 	for i := minIndex; i <= maxIndex; i++ {
 		// Need this duplicate condition check because findIndex gets closest numbers,
 		// allowing for flexible queries.
 		if store[i].Timestamp >= minTs && store[i].Timestamp <= maxTs {
-			total += store[i].Price
+			total += int(store[i].Price)
 			count += 1
 		}
 	}
