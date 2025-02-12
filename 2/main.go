@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"slices"
+	"time"
 )
 
 type InsertMessage struct {
@@ -103,6 +104,11 @@ func insert(store *[]InsertMessage, timestamp int32, price int32) {
 	*store = append(*store, msg)
 }
 
+func insertWrite(store *[]InsertMessage, timestamp int32, price int32, file *os.File) {
+	file.Write([]byte(fmt.Sprintf("%d %d\n", timestamp, price)))
+	insert(store, timestamp, price)
+}
+
 func query(store []InsertMessage, minTs int32, maxTs int32) float64 {
 	// Do lazy sorting to improve on insert performance.
 	slices.SortFunc(store, compare)
@@ -131,9 +137,16 @@ func query(store []InsertMessage, minTs int32, maxTs int32) float64 {
 }
 
 func handleConnection(conn net.Conn) {
+	var err error
+	ts := time.Now().UTC().Format(time.RFC3339)
+	file, err := os.Create(fmt.Sprintf("debug_%s.log", ts))
+	if err != nil {
+		panic(err)
+	}
 	defer func() {
 		fmt.Println("Closing connection")
 		conn.Close()
+		file.Close()
 	}()
 
 	buf := make([]byte, 9)
@@ -156,7 +169,7 @@ func handleConnection(conn net.Conn) {
 			//if err != nil {
 			//	fmt.Println("Error doing binary read:", err)
 			//}
-			insert(&store, fieldOne, fieldTwo)
+			insertWrite(&store, fieldOne, fieldTwo, file)
 		case 'Q':
 			//var msg QueryMessage
 			var avg float64
