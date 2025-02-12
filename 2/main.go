@@ -98,13 +98,14 @@ func insert(store *[]InsertMessage, timestamp int32, price int32) {
 	*store = append(*store, msg)
 }
 
-func query(store []InsertMessage, getter func(x InsertMessage) int, minTs int32, maxTs int32) float64 {
+var getter = func(x InsertMessage) int { return int(x.Timestamp) }
+
+func query(store []InsertMessage, minTs int32, maxTs int32) float64 {
 	//fmt.Printf("Querying %d %d\n", minTs, maxTs)
 	// Find the average price
 	if len(store) == 0 {
 		return 0.0
 	}
-	//getter := func(x InsertMessage) int { return int(x.Timestamp) }
 	minIndex := findMinIndex(store, int(minTs), getter)
 	maxIndex := findMaxIndex(store, int(maxTs), getter)
 	var total int32 = 0
@@ -128,7 +129,6 @@ func handleConnection(conn net.Conn) {
 
 	buf := make([]byte, 9)
 	store := make([]InsertMessage, 0)
-	getter := func(x InsertMessage) int { return int(x.Timestamp) }
 	for {
 		n, err := conn.Read(buf)
 		if err != nil {
@@ -149,7 +149,7 @@ func handleConnection(conn net.Conn) {
 			var msg QueryMessage
 			var avg float64
 			err = binary.Read(bytes.NewBuffer(buf[1:]), binary.BigEndian, &msg)
-			avg = query(store, getter, msg.MinTimestamp, msg.MaxTimestamp)
+			avg = query(store, msg.MinTimestamp, msg.MaxTimestamp)
 			var output string
 			if math.Trunc(avg) == avg {
 				output = strconv.FormatInt(int64(avg), 10)
