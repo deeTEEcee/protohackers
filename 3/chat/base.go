@@ -64,18 +64,18 @@ func (s *Server) RegisterUser(client *Client, name string) {
 }
 
 func (s *Server) DeregisterUser(client *Client) {
-	removeIndex := -1
-	for i, c := range s.Clients {
-		if c == client {
-			removeIndex = i
-		}
-	}
-	if removeIndex == -1 {
-		panic(fmt.Sprintf("The client '%s' was not found", client.Name))
-	}
-	log.Printf("Dergistering user %s", client.Name)
 	go func() {
 		s.Mu.Lock()
+		removeIndex := -1
+		for i, c := range s.Clients {
+			if c == client {
+				removeIndex = i
+			}
+		}
+		if removeIndex == -1 {
+			panic(fmt.Sprintf("The client '%s' was not found", client.Name))
+		}
+		log.Printf("Dergistering user %s", client.Name)
 		log.Println("Removing", client.Name)
 		slices.Delete(s.Clients, removeIndex, removeIndex+1)
 		s.Mu.Unlock()
