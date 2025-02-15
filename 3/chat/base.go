@@ -50,11 +50,11 @@ func (s *Server) RegisterUser(client *Client, name string) {
 	client.Name = name
 	s.Mu.Lock()
 	s.AddClient(client)
+	s.Mu.Unlock()
 	clientNames := make([]string, 0)
 	for _, c := range s.Clients {
 		clientNames = append(clientNames, c.Name)
 	}
-	s.Mu.Unlock()
 	go func() {
 		if len(clientNames) > 0 {
 			s.Send(client, fmt.Sprintf("* The room contains: %s\n", strings.Join(clientNames, ", ")))
@@ -75,9 +75,8 @@ func (s *Server) DeregisterUser(client *Client) {
 		if removeIndex == -1 {
 			panic(fmt.Sprintf("The client '%s' was not found", client.Name))
 		}
-		log.Printf("Dergistering user %s", client.Name)
-		log.Println("Removing", client.Name)
-		slices.Delete(s.Clients, removeIndex, removeIndex+1)
+		log.Printf("Deregistering user %s", client.Name)
+		s.Clients = slices.Delete(s.Clients, removeIndex, removeIndex+1)
 		s.Mu.Unlock()
 	}()
 	go func() {
