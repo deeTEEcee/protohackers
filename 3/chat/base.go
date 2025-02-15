@@ -51,6 +51,7 @@ func (s *Server) RegisterUser(client *Client, name string) {
 	s.Mu.Lock()
 	s.AddClient(client)
 	s.Mu.Unlock()
+	log.Printf("User registered. Number of clients: %d", len(s.Clients))
 	clientNames := make([]string, 0)
 	for _, c := range s.Clients {
 		if c != client {
@@ -78,6 +79,7 @@ func (s *Server) DeregisterUser(client *Client) {
 		}
 		log.Printf("Deregistering user %s", client.Name)
 		s.Clients = slices.Delete(s.Clients, removeIndex, removeIndex+1)
+		log.Printf("User deregistered. Number of clients: %d", len(s.Clients))
 		s.Mu.Unlock()
 	}()
 	go func() {
