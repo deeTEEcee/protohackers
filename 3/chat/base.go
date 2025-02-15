@@ -53,7 +53,9 @@ func (s *Server) RegisterUser(client *Client, name string) {
 	s.Mu.Unlock()
 	clientNames := make([]string, 0)
 	for _, c := range s.Clients {
-		clientNames = append(clientNames, c.Name)
+		if c != client {
+			clientNames = append(clientNames, c.Name)
+		}
 	}
 	go func() {
 		if len(clientNames) > 0 {
