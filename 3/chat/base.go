@@ -58,9 +58,8 @@ func (s *Server) RegisterUser(client *Client, name string) {
 		}
 	}
 	go func() {
-		if len(clientNames) > 0 {
-			s.Send(client, fmt.Sprintf("* The room contains: %s\n", strings.Join(clientNames, ", ")))
-		}
+		// Show this message even if room empty
+		s.Send(client, fmt.Sprintf("* The room contains: %s\n", strings.Join(clientNames, ", ")))
 		s.Publish(fmt.Sprintf("* %s has entered the room\n", client.Name), client)
 	}()
 }
