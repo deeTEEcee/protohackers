@@ -2,43 +2,88 @@ package chat
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"net"
+	"slices"
 	"strings"
+	"sync"
 	"unicode"
 )
 
 type Client struct {
 	Connection net.Conn
-	// TODO: Learn mutxes and create an autoid incrementer (https://gobyexample.com/mutexes)
-	// https://stackoverflow.com/questions/64631848/how-to-create-an-autoincrement-id-field
-	//id
-	Name string
+	Name       string
 }
 
-func (c Client) HasName() bool {
+func (c *Client) HasName() bool {
 	return c.Name != ""
 }
 
-func (c Client) Send(s Server, message string) {
+func (c *Client) Send(s *Server, message string) {
 
 }
 
 type Server struct {
-	clients []*Client
+	Clients []*Client
+	Mu      *sync.Mutex
 }
 
-func (s Server) AddClient(c *Client) {
-	s.clients = append(s.clients, c)
+func (s *Server) AddClient(c *Client) {
+	s.Mu.Lock()
+	defer s.Mu.Unlock()
+	s.Clients = append(s.Clients, c)
 }
 
-func (s Server) Publish(message string) {
-	for _, client := range s.clients {
-		s.Send(client, message)
+func (s *Server) Publish(message string, exclude *Client) {
+	go func() {
+		log.Println("Running publish")
+		for _, client := range s.Clients {
+			if exclude == nil || client != exclude {
+				log.Println("Sending ", message, " to ", client.Name)
+				s.Send(client, message)
+			}
+		}
+	}()
+}
+
+func (s *Server) RegisterUser(client *Client, name string) {
+	client.Name = name
+	s.AddClient(client)
+	clientNames := make([]string, 0)
+	for _, c := range s.Clients {
+		clientNames = append(clientNames, c.Name)
 	}
+	go func() {
+		if len(clientNames) > 0 {
+			s.Send(client, fmt.Sprintf("* The room contains: %s\n", strings.Join(clientNames, ", ")))
+		}
+		s.Publish(fmt.Sprintf("* %s has entered the room\n", client.Name), client)
+	}()
 }
 
-func (s Server) Send(client *Client, message string) {
+func (s *Server) DeregisterUser(client *Client) {
+	removeIndex := -1
+	for i, c := range s.Clients {
+		if c == client {
+			removeIndex = i
+		}
+	}
+	if removeIndex == -1 {
+		panic(fmt.Sprintf("The client '%s' was not found", client.Name))
+	}
+	go func() {
+		s.Mu.Lock()
+		log.Println("Removing", client.Name)
+		slices.Delete(s.Clients, removeIndex, removeIndex+1)
+		s.Mu.Unlock()
+	}()
+	go func() {
+		s.Publish(fmt.Sprintf("* %s has left the room", client.Name), client)
+	}()
+}
+
+func (s *Server) Send(client *Client, message string) {
 	_, err := client.Connection.Write([]byte(message))
 	if err != nil {
 		log.Printf("Error occurred while sending: %s\n", err)
@@ -46,10 +91,11 @@ func (s Server) Send(client *Client, message string) {
 	}
 }
 
-func (s Server) Wait(client *Client) string {
+func (s *Server) Wait(client *Client) string {
 	reader := bufio.NewReader(client.Connection)
 	message, err := reader.ReadString('\n')
 	if err != nil {
+		// This can occur with EOF when the client disconnects intentionally or not.
 		log.Printf("Error occurred while reading from client: %s\n", err)
 		return ""
 	}

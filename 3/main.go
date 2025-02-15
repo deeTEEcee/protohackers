@@ -7,17 +7,22 @@ import (
 	"os"
 	. "protohackers/chat"
 	"protohackers/validation"
+	"sync"
 )
+
+// TODO: Handle bug where "has entered the room" is notifying the client itself.
+// TODO: Add unit tests for tcp chat room
 
 func handleConnection(server *Server, client *Client) {
 	defer func() {
 		log.Println("Closing connection")
 		client.Connection.Close()
+		server.DeregisterUser(client)
 	}()
 	for {
 		success := runOnce(server, client)
 		if !success {
-			break
+			return
 		}
 	}
 }
@@ -27,15 +32,19 @@ func runOnce(server *Server, client *Client) bool {
 		server.Send(client, "Welcome to budgetchat! What shall I call you?\n")
 		response := server.Wait(client)
 		if validation.ValidateName(response) {
-			client.Name = response
-			log.Printf("Name %s saved\n", response)
+			server.RegisterUser(client, response)
 			return true
 		} else {
 			server.Send(client, fmt.Sprintf("Name '%s' is invalid. Disconnecting\n", response))
 			return false
 		}
 	}
-	// TODO: Server waits for client to send messages
+	message := server.Wait(client)
+	if message == "" {
+		return false
+	}
+	chatMessage := fmt.Sprintf("[%s] %s\n", client.Name, message)
+	server.Publish(chatMessage, client)
 	return true
 }
 
@@ -49,7 +58,7 @@ func startServer(address string) {
 
 	fmt.Println("Server listening on :8080")
 
-	server := Server{}
+	server := Server{Mu: &sync.Mutex{}}
 
 	for {
 		conn, err := listener.Accept()
