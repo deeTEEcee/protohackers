@@ -10,7 +10,6 @@ import (
 	"sync"
 )
 
-// TODO: Handle bug where "has entered the room" is notifying the client itself.
 // TODO: Add unit tests for tcp chat room
 
 func handleConnection(server *Server, client *Client) {

@@ -48,6 +48,7 @@ func (s *Server) Publish(message string, exclude *Client) {
 }
 
 func (s *Server) RegisterUser(client *Client, name string) {
+	log.Printf("Registering user %s", name)
 	client.Name = name
 	s.AddClient(client)
 	clientNames := make([]string, 0)
@@ -72,6 +73,7 @@ func (s *Server) DeregisterUser(client *Client) {
 	if removeIndex == -1 {
 		panic(fmt.Sprintf("The client '%s' was not found", client.Name))
 	}
+	log.Printf("Dergistering user %s", client.Name)
 	go func() {
 		s.Mu.Lock()
 		log.Println("Removing", client.Name)
