@@ -30,8 +30,6 @@ type Server struct {
 }
 
 func (s *Server) AddClient(c *Client) {
-	s.Mu.Lock()
-	defer s.Mu.Unlock()
 	s.Clients = append(s.Clients, c)
 }
 
@@ -50,11 +48,13 @@ func (s *Server) Publish(message string, exclude *Client) {
 func (s *Server) RegisterUser(client *Client, name string) {
 	log.Printf("Registering user %s", name)
 	client.Name = name
+	s.Mu.Lock()
 	s.AddClient(client)
 	clientNames := make([]string, 0)
 	for _, c := range s.Clients {
 		clientNames = append(clientNames, c.Name)
 	}
+	s.Mu.Unlock()
 	go func() {
 		if len(clientNames) > 0 {
 			s.Send(client, fmt.Sprintf("* The room contains: %s\n", strings.Join(clientNames, ", ")))
