@@ -57,11 +57,6 @@ func (s *Server) RemoveClient(client *Client) {
 			removeIndex = i
 		}
 	}
-	if removeIndex == -1 {
-		// We have a strange case where the client was not registered but we'll still
-		// attempt to remove it.
-		return
-	}
 	s.Clients = slices.Delete(s.Clients, removeIndex, removeIndex+1)
 }
 
@@ -71,7 +66,7 @@ func (s *Server) Send(client *Client, message string) {
 		log.Printf("Error occurred while sending: %s\n", err)
 		return
 	}
-	log.Printf("Sending message: '%s' to %s\n", message, client.Name)
+	//log.Printf("Sending message: '%s' to %s\n", message, client.Name)
 }
 
 func (s *Server) Wait(client *Client) string {

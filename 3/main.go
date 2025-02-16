@@ -16,7 +16,9 @@ func handleClient(server *Server, client *Client) {
 	defer func() {
 		log.Println("Closing connection")
 		client.Connection.Close()
-		server.Exit <- client
+		if client.HasName() {
+			server.Exit <- client
+		}
 	}()
 	for {
 		success := runOnce(server, client)
@@ -59,8 +61,6 @@ func handleChatroom(s *Server) {
 
 func runOnce(server *Server, client *Client) bool {
 	if !client.HasName() {
-		// TODO: This part is actually a bit. We tried limiting server <-> client behavior
-		// to messages but initially, the client is still handling server work.
 		server.Send(client, "Welcome to budgetchat! What shall I call you?\n")
 		response := server.Wait(client)
 		if validation.ValidateName(response) {
