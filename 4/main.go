@@ -54,7 +54,7 @@ func runOnce(conn *net.UDPConn, buffer []byte, store KeyStore) bool {
 		message = strings.TrimRightFunc(message, unicode.IsSpace)
 	}
 	key, value, isInsert := parse.ParseMessage(message)
-	log.Printf("%s: %s\n", clientAddr, message)
+	//log.Printf("%s: %s\n", clientAddr, message)
 	if isInsert {
 		if key != "version" {
 			store.Put(key, value)
