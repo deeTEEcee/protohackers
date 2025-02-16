@@ -16,6 +16,11 @@ type Client struct {
 	Name       string
 }
 
+type Message struct {
+	Sender  *Client
+	Message string
+}
+
 func (c *Client) HasName() bool {
 	return c.Name != ""
 }
@@ -27,6 +32,12 @@ func (c *Client) Send(s *Server, message string) {
 type Server struct {
 	Clients []*Client
 	Mu      *sync.Mutex
+
+	// Channels
+	Msg chan Message // A message we need to share to all clients other than the sender
+	// Tells us when a client enters or exits
+	Enter chan *Client
+	Exit  chan *Client
 }
 
 func (s *Server) AddClient(c *Client) {
@@ -34,60 +45,29 @@ func (s *Server) AddClient(c *Client) {
 }
 
 func (s *Server) Publish(message string, exclude *Client) {
-	go func() {
-		log.Println("Running publish")
-		for _, client := range s.Clients {
-			if exclude == nil || client != exclude {
-				log.Println("Sending ", message, " to ", client.Name)
-				s.Send(client, message)
-			}
-		}
-	}()
-}
-
-func (s *Server) RegisterUser(client *Client, name string) {
-	log.Printf("Registering user %s", name)
-	client.Name = name
-	s.Mu.Lock()
-	s.AddClient(client)
-	s.Mu.Unlock()
-	log.Printf("User registered. Number of clients: %d", len(s.Clients))
-	clientNames := make([]string, 0)
-	for _, c := range s.Clients {
-		if c != client {
-			clientNames = append(clientNames, c.Name)
+	for _, client := range s.Clients {
+		if exclude == nil || client != exclude {
+			//log.Println("Sending ", message, " to ", client.Name)
+			s.Send(client, message)
 		}
 	}
-	go func() {
-		// Show this message even if room empty
-		s.Send(client, fmt.Sprintf("* The room contains: %s\n", strings.Join(clientNames, ", ")))
-		s.Publish(fmt.Sprintf("* %s has entered the room\n", client.Name), client)
-	}()
 }
 
-func (s *Server) DeregisterUser(client *Client) {
-	go func() {
-		s.Mu.Lock()
-		removeIndex := -1
-		for i, c := range s.Clients {
-			if c == client {
-				removeIndex = i
-			}
+func (s *Server) RemoveClient(client *Client) {
+	removeIndex := -1
+	for i, c := range s.Clients {
+		if c == client {
+			removeIndex = i
 		}
-		if removeIndex == -1 {
-			panic(fmt.Sprintf("The client '%s' was not found", client.Name))
-		}
-		log.Printf("Deregistering user %s", client.Name)
-		s.Clients = slices.Delete(s.Clients, removeIndex, removeIndex+1)
-		log.Printf("User deregistered. Number of clients: %d", len(s.Clients))
-		s.Mu.Unlock()
-	}()
-	go func() {
-		s.Publish(fmt.Sprintf("* %s has left the room", client.Name), client)
-	}()
+	}
+	if removeIndex == -1 {
+		panic(fmt.Sprintf("The client '%s' was not found", client.Name))
+	}
+	s.Clients = slices.Delete(s.Clients, removeIndex, removeIndex+1)
 }
 
 func (s *Server) Send(client *Client, message string) {
+	log.Printf("%v\n", client)
 	_, err := client.Connection.Write([]byte(message))
 	if err != nil {
 		log.Printf("Error occurred while sending: %s\n", err)
