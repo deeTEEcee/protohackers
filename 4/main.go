@@ -27,6 +27,10 @@ func handleClient(connection *net.UDPConn) {
 	defer func() {
 		log.Println("Ending connection")
 		fmt.Println(store.store)
+		err := connection.Close()
+		if err != nil {
+			log.Printf("Error occurred during close: %s\n", err)
+		}
 	}()
 	buffer := make([]byte, 1024)
 	store.Put("version", "Ken's Key-Value Store 1.0")
@@ -59,7 +63,7 @@ func runOnce(conn *net.UDPConn, buffer []byte, store KeyStore) bool {
 		value = store.Get(key)
 		_, err = conn.WriteToUDP([]byte(fmt.Sprintf("%s=%s", key, value)), clientAddr)
 		if err != nil {
-			log.Println("Error reading from UDP:", err)
+			log.Println("Error writing to UDP:", err)
 			return false
 		}
 	}
