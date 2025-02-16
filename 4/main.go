@@ -26,7 +26,6 @@ func handleClient(connection *net.UDPConn) {
 	store := KeyStore{make(map[string]string)}
 	defer func() {
 		log.Println("Ending connection")
-		fmt.Println(store.store)
 		err := connection.Close()
 		if err != nil {
 			log.Printf("Error occurred during close: %s\n", err)
