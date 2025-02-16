@@ -2,12 +2,10 @@ package chat
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"net"
 	"slices"
 	"strings"
-	"sync"
 	"unicode"
 )
 
@@ -31,7 +29,6 @@ func (c *Client) Send(s *Server, message string) {
 
 type Server struct {
 	Clients []*Client
-	Mu      *sync.Mutex
 
 	// Channels
 	Msg chan Message // A message we need to share to all clients other than the sender
@@ -61,13 +58,14 @@ func (s *Server) RemoveClient(client *Client) {
 		}
 	}
 	if removeIndex == -1 {
-		panic(fmt.Sprintf("The client '%s' was not found", client.Name))
+		// We have a strange case where the client was not registered but we'll still
+		// attempt to remove it.
+		return
 	}
 	s.Clients = slices.Delete(s.Clients, removeIndex, removeIndex+1)
 }
 
 func (s *Server) Send(client *Client, message string) {
-	log.Printf("%v\n", client)
 	_, err := client.Connection.Write([]byte(message))
 	if err != nil {
 		log.Printf("Error occurred while sending: %s\n", err)

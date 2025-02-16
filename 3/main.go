@@ -8,7 +8,6 @@ import (
 	. "protohackers/chat"
 	"protohackers/validation"
 	"strings"
-	"sync"
 )
 
 // TODO: Add unit tests for tcp chat room
@@ -46,7 +45,7 @@ func handleChatroom(s *Server) {
 			s.Send(client, fmt.Sprintf("* The room contains: %s\n", strings.Join(clientNames, ", ")))
 			s.Publish(fmt.Sprintf("* %s has entered the room\n", client.Name), client)
 		case client := <-s.Exit:
-			log.Printf("Dergistering user %s", client.Name)
+			log.Printf("Deregistering user %s", client.Name)
 			// Unregister the user and send messages
 			s.RemoveClient(client)
 			s.Publish(fmt.Sprintf("* %s has left the room\n", client.Name), client)
@@ -92,7 +91,6 @@ func startServer(address string) {
 	fmt.Println("Server listening on :8080")
 
 	server := Server{
-		Mu:    &sync.Mutex{},
 		Msg:   make(chan Message),
 		Enter: make(chan *Client),
 		Exit:  make(chan *Client),
