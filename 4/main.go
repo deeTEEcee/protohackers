@@ -50,13 +50,14 @@ func runOnce(conn *net.UDPConn, buffer []byte, store KeyStore) bool {
 		message = strings.TrimRightFunc(message, unicode.IsSpace)
 	}
 	key, value, isInsert := parse.ParseMessage(message)
+	log.Printf("%s: %s\n", clientAddr, message)
 	if isInsert {
 		if key != "version" {
 			store.Put(key, value)
 		}
 	} else {
 		value = store.Get(key)
-		_, err = conn.WriteToUDP([]byte(fmt.Sprintf("key=%s", value)), clientAddr)
+		_, err = conn.WriteToUDP([]byte(fmt.Sprintf("%s=%s", key, value)), clientAddr)
 		if err != nil {
 			log.Println("Error reading from UDP:", err)
 			return false
