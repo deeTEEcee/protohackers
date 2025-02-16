@@ -71,6 +71,7 @@ func (s *Server) Send(client *Client, message string) {
 		log.Printf("Error occurred while sending: %s\n", err)
 		return
 	}
+	log.Printf("Sending message: '%s' to %s\n", message, client.Name)
 }
 
 func (s *Server) Wait(client *Client) string {
