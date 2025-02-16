@@ -89,5 +89,5 @@ func startServer(address string) {
 }
 
 func main() {
-	startServer(":8080")
+	startServer("0.0.0.0:8080")
 }
