@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+// TODO: Client messages aren't working
+// TODO: Client is not receiving 'has left the room, has entered the room' notifications from the server
+// TODO: Add rewrite for boguscoin addresses
+
 func handleClient(client net.Conn, upstream net.Conn) {
 	defer func() {
 		log.Println("Closing connection")
