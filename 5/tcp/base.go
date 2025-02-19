@@ -27,11 +27,12 @@ func ReadMessage(conn net.Conn) string {
 	return message
 }
 
-func WriteMessage(conn net.Conn, message string) {
+func WriteMessage(conn net.Conn, message string) error {
 	_, err := conn.Write([]byte(message))
 	if err != nil {
 		log.Printf("Error occurred while sending: %s\n", err)
-		return
+		return err
 	}
 	log.Printf("Writing '%s' to (%s)\n", message, conn.LocalAddr())
+	return nil
 }

@@ -6,17 +6,15 @@ import (
 	"net"
 	"os"
 	. "protohackers/tcp"
-	"time"
 )
 
-// TODO: Client messages aren't working
-// TODO: Client is not receiving 'has left the room, has entered the room' notifications from the server
 // TODO: Add rewrite for boguscoin addresses
 
 func handleClient(client net.Conn, upstream net.Conn) {
 	defer func() {
-		log.Println("Closing connection")
+		log.Println("Closing connection client")
 		client.Close()
+		upstream.Close()
 	}()
 	// 1. Initialize the chatroom name first
 	initServerMsg := ReadMessage(upstream)
@@ -41,18 +39,36 @@ func handleClient(client net.Conn, upstream net.Conn) {
 }
 
 func handleUpstream(client net.Conn, upstream net.Conn) {
-	// We don't know when to expect upstream messages. So this has to be handled
-	// separately from client messages
-	message := ReadMessage(upstream)
-	// TODO: Filter message here and replace bitcoin
-	WriteMessage(client, message)
-	time.Sleep(100 * time.Millisecond)
+	defer func() {
+		log.Println("Closing connection upstream")
+		client.Close()
+		upstream.Close()
+	}()
+
+	for {
+		log.Println("Waiting for new message")
+		message := ReadMessage(upstream)
+		if message == "" {
+			return
+		}
+		// TODO: Filter message here and replace bitcoin
+		err := WriteMessage(client, message)
+		if err != nil {
+			return
+		}
+	}
 }
 
 func runOnce(client net.Conn, upstream net.Conn) bool {
 	message := ReadMessage(client)
+	if message == "" {
+		return false
+	}
 	// TODO: Filter message here and replace bitcoin
-	WriteMessage(upstream, message)
+	err := WriteMessage(upstream, message)
+	if err != nil {
+		return false
+	}
 	return true
 }
 
