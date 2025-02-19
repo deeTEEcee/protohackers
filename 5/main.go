@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	. "protohackers/tcp"
+	"time"
 )
 
 func handleClient(client net.Conn, upstream net.Conn) {
@@ -20,9 +21,8 @@ func handleClient(client net.Conn, upstream net.Conn) {
 	initClientResponse := ReadMessage(client)
 	WriteMessage(upstream, initClientResponse)
 
-	// TODO: Remove this stub later but why are we not receiving 'The room contains'
-	serverMsg := ReadMessage(upstream)
-	WriteMessage(client, serverMsg)
+	//serverMsg := ReadMessage(upstream)
+	//WriteMessage(client, serverMsg)
 
 	// 2. After step 1, we just have to send every upstream message back down to the client
 	go handleUpstream(client, upstream)
@@ -42,6 +42,7 @@ func handleUpstream(client net.Conn, upstream net.Conn) {
 	message := ReadMessage(upstream)
 	// TODO: Filter message here and replace bitcoin
 	WriteMessage(client, message)
+	time.Sleep(100 * time.Millisecond)
 }
 
 func runOnce(client net.Conn, upstream net.Conn) bool {

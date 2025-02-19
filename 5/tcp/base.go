@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"log"
 	"net"
-	"strings"
-	"unicode"
 )
 
 func SetupUpstream(addr string) net.Conn {
@@ -25,7 +23,6 @@ func ReadMessage(conn net.Conn) string {
 		log.Printf("Error occurred while reading from client: %s\n", err)
 		return ""
 	}
-	message = strings.TrimRightFunc(message, unicode.IsSpace)
 	log.Printf("Read message '%s' from (%s)\n", message, conn.LocalAddr())
 	return message
 }
