@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"regexp"
+	"strings"
 )
 
 func SetupUpstream(addr string) net.Conn {
@@ -39,9 +40,15 @@ func WriteMessage(conn net.Conn, message string) error {
 }
 
 var tonyAddress = "7YWHMfk9JZe0LM0g1ZauHuiSxhI"
-var re = regexp.MustCompile(`(\s+)7[a-zA-Z0-9]{25,36}|7[a-zA-Z0-9]{25,36}(\s+)`)
+var re = regexp.MustCompile(`^7[a-zA-Z0-9]{25,34}$`)
 
 func Rewrite(message string) string {
 	// Rewrite boguscoin addresses as requested in https://protohackers.com/problem/5
-	return re.ReplaceAllString(message, `${1}`+tonyAddress+`${2}`)
+	// Regex is annoying. It was easier to do mix regex + word split to handle cases.
+	words := strings.Split(message, " ")
+	new_words := make([]string, 0)
+	for _, word := range words {
+		new_words = append(new_words, re.ReplaceAllString(word, tonyAddress))
+	}
+	return strings.Join(new_words, " ")
 }
