@@ -6,9 +6,8 @@ import (
 	"net"
 	"os"
 	. "protohackers/tcp"
+	"strings"
 )
-
-// TODO: Add rewrite for boguscoin addresses
 
 func handleClient(client net.Conn, upstream net.Conn) {
 	defer func() {
@@ -49,7 +48,9 @@ func handleUpstream(client net.Conn, upstream net.Conn) {
 		}
 		// Not sure why this is needed but I guess sometimes as a malicious proxy you only
 		// proxy client OR server side?
+		message = strings.TrimRight(message, "\n")
 		message = Rewrite(message)
+		message += "\n"
 		err := WriteMessage(client, message)
 		if err != nil {
 			return
@@ -64,7 +65,9 @@ func runOnce(client net.Conn, upstream net.Conn) bool {
 	}
 	// We rewrite messages that we send upstream to the client.
 	// When `handleUpstream` happens, that message will be the rewritten message.
+	message = strings.TrimRight(message, "\n")
 	message = Rewrite(message)
+	message += "\n"
 	err := WriteMessage(upstream, message)
 	if err != nil {
 		return false

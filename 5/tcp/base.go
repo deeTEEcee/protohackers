@@ -46,9 +46,9 @@ func Rewrite(message string) string {
 	// Rewrite boguscoin addresses as requested in https://protohackers.com/problem/5
 	// Regex is annoying. It was easier to do mix regex + word split to handle cases.
 	words := strings.Split(message, " ")
-	new_words := make([]string, 0)
+	newWords := make([]string, 0)
 	for _, word := range words {
-		new_words = append(new_words, re.ReplaceAllString(word, tonyAddress))
+		newWords = append(newWords, re.ReplaceAllString(word, tonyAddress))
 	}
-	return strings.Join(new_words, " ")
+	return strings.Join(newWords, " ")
 }
