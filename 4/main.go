@@ -87,11 +87,6 @@ func startServer(address string) {
 		fmt.Println("Error configuring:", err)
 		return
 	}
-	err = conn.SetReadDeadline(time.Now().Add(3 * time.Second))
-	if err != nil {
-		fmt.Println("Error configuring:", err)
-		return
-	}
 
 	for {
 		handleClient(conn)
