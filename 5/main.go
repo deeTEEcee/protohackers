@@ -48,7 +48,6 @@ func handleUpstream(client net.Conn, upstream net.Conn) {
 		if message == "" {
 			return
 		}
-		message = Rewrite(message)
 		err := WriteMessage(client, message)
 		if err != nil {
 			return
