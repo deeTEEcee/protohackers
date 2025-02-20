@@ -28,4 +28,8 @@ func TestRewriteFunc(t *testing.T) {
 		"Hi alice, please send payment to 7YWHMfk9JZe0LM0g1ZauHuiSxhI",
 		tcp.Rewrite("Hi alice, please send payment to 7iKDZEwPZSqIvDnHvVN2r0hUWXD5rHX"),
 	)
+	assert.Equal(t,
+		"[BlueHacker401] Send refunds to 7YWHMfk9JZe0LM0g1ZauHuiSxhI please.",
+		tcp.Rewrite("[BlueHacker401] Send refunds to 7WibVi2N9PB41wWQb093zfoMwb7bSB8Tym please."),
+	)
 }

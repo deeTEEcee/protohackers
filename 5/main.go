@@ -43,7 +43,6 @@ func handleUpstream(client net.Conn, upstream net.Conn) {
 	}()
 
 	for {
-		log.Println("Waiting for new message")
 		message := ReadMessage(upstream)
 		if message == "" {
 			return

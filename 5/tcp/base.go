@@ -24,7 +24,7 @@ func ReadMessage(conn net.Conn) string {
 		log.Printf("Error occurred while reading from client: %s\n", err)
 		return ""
 	}
-	log.Printf("Read message '%s' from (%s)\n", message, conn.LocalAddr())
+	log.Printf("Read message '%s' from (%s)", message, conn.LocalAddr())
 	return message
 }
 
@@ -34,7 +34,7 @@ func WriteMessage(conn net.Conn, message string) error {
 		log.Printf("Error occurred while sending: %s\n", err)
 		return err
 	}
-	log.Printf("Writing '%s' to (%s)\n", message, conn.LocalAddr())
+	log.Printf("Writing '%s' to (%s)", message, conn.LocalAddr())
 	return nil
 }
 
