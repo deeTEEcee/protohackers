@@ -7,6 +7,7 @@ import (
 	"os"
 	"protohackers/parse"
 	"strings"
+	"time"
 	"unicode"
 )
 
@@ -77,12 +78,22 @@ func startServer(address string) {
 	}
 	fmt.Println("Server listening on " + address)
 	conn, err := net.ListenUDP("udp", addr)
+	if err != nil {
+		fmt.Println("Error accepting:", err)
+		return
+	}
+	err = conn.SetWriteDeadline(time.Now().Add(3 * time.Second))
+	if err != nil {
+		fmt.Println("Error configuring:", err)
+		return
+	}
+	err = conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	if err != nil {
+		fmt.Println("Error configuring:", err)
+		return
+	}
 
 	for {
-		if err != nil {
-			fmt.Println("Error accepting:", err)
-			continue
-		}
 		handleClient(conn)
 	}
 }
