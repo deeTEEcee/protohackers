@@ -23,9 +23,6 @@ func handleClient(client net.Conn, upstream net.Conn) {
 	initClientResponse := ReadMessage(client)
 	WriteMessage(upstream, initClientResponse)
 
-	//serverMsg := ReadMessage(upstream)
-	//WriteMessage(client, serverMsg)
-
 	// 2. After step 1, we just have to send every upstream message back down to the client
 	go handleUpstream(client, upstream)
 
@@ -51,7 +48,7 @@ func handleUpstream(client net.Conn, upstream net.Conn) {
 		if message == "" {
 			return
 		}
-		// TODO: Filter message here and replace bitcoin
+		message = Rewrite(message)
 		err := WriteMessage(client, message)
 		if err != nil {
 			return
@@ -64,7 +61,7 @@ func runOnce(client net.Conn, upstream net.Conn) bool {
 	if message == "" {
 		return false
 	}
-	// TODO: Filter message here and replace bitcoin
+	message = Rewrite(message)
 	err := WriteMessage(upstream, message)
 	if err != nil {
 		return false

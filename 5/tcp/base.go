@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"net"
+	"regexp"
 )
 
 func SetupUpstream(addr string) net.Conn {
@@ -35,4 +36,12 @@ func WriteMessage(conn net.Conn, message string) error {
 	}
 	log.Printf("Writing '%s' to (%s)\n", message, conn.LocalAddr())
 	return nil
+}
+
+var tonyAddress = "7YWHMfk9JZe0LM0g1ZauHuiSxhI"
+var re = regexp.MustCompile(`(\s+)7[a-zA-Z0-9]{25,36}|7[a-zA-Z0-9]{25,36}(\s+)`)
+
+func Rewrite(message string) string {
+	// Rewrite boguscoin addresses as requested in https://protohackers.com/problem/5
+	return re.ReplaceAllString(message, `${1}`+tonyAddress+`${2}`)
 }
