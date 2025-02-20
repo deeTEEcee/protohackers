@@ -34,21 +34,21 @@ func handleClient(connection *net.UDPConn) {
 	buffer := make([]byte, 1024)
 	store.Put("version", "Ken's Key-Value Store 1.0")
 	for {
-		runOnce(connection, buffer, &store)
+		runOnce(connection, &buffer, &store)
 		//if !success {
 		//	return
 		//}
 	}
 }
 
-func runOnce(conn *net.UDPConn, buffer []byte, store *KeyStore) bool {
-	n, clientAddr, err := conn.ReadFromUDP(buffer)
+func runOnce(conn *net.UDPConn, buffer *[]byte, store *KeyStore) bool {
+	n, clientAddr, err := conn.ReadFromUDP(*buffer)
 	if err != nil {
 		log.Println("Error reading from UDP:", err)
 		return false
 	}
 
-	message := string(buffer[:n])
+	message := string((*buffer)[:n])
 	if strings.Contains(message, "\n") {
 		message = strings.TrimRightFunc(message, unicode.IsSpace)
 	}
