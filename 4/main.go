@@ -44,13 +44,13 @@ func handleClient(connection *net.UDPConn) {
 
 func runOnce(conn *net.UDPConn, buffer *[]byte, store *KeyStore) bool {
 	start := time.Now()
-	t := time.Now()
-	n, clientAddr, err := conn.ReadFromUDP(*buffer)
+	//t := time.Now()
+	n, clientAddr, err := conn.ReadFrom(*buffer)
 	if err != nil {
 		log.Println("Error reading from UDP:", err)
 		return false
 	}
-	log.Printf("Time to read: %s", time.Since(t))
+	//log.Printf("Time to read: %s", time.Since(t))
 
 	message := string((*buffer)[:n])
 	if strings.Contains(message, "\n") {
@@ -60,17 +60,17 @@ func runOnce(conn *net.UDPConn, buffer *[]byte, store *KeyStore) bool {
 	//log.Printf("%s: %s\n", clientAddr, message)
 	if isInsert {
 		if key != "version" {
-			t = time.Now()
+			//t = time.Now()
 			store.Put(key, value)
-			log.Printf("Time to put: %s", time.Since(t))
+			//log.Printf("Time to put: %s", time.Since(t))
 		}
 	} else {
-		t = time.Now()
+		//t = time.Now()
 		value = store.Get(key)
-		log.Printf("Time to get: %s", time.Since(t))
-		t = time.Now()
-		_, err = conn.WriteToUDP([]byte(fmt.Sprintf("%s=%s", key, value)), clientAddr)
-		log.Printf("Time to write udp: %s", time.Since(t))
+		//log.Printf("Time to get: %s", time.Since(t))
+		//t = time.Now()
+		_, err = conn.WriteTo([]byte(fmt.Sprintf("%s=%s", key, value)), clientAddr)
+		//log.Printf("Time to write udp: %s", time.Since(t))
 		if err != nil {
 			log.Println("Error writing to UDP:", err)
 			return false
