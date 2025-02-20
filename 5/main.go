@@ -60,6 +60,8 @@ func runOnce(client net.Conn, upstream net.Conn) bool {
 	if message == "" {
 		return false
 	}
+	// We rewrite messages that we send upstream to the client.
+	// When `handleUpstream` happens, that message will be the rewritten message.
 	message = Rewrite(message)
 	err := WriteMessage(upstream, message)
 	if err != nil {
