@@ -47,6 +47,9 @@ func handleUpstream(client net.Conn, upstream net.Conn) {
 		if message == "" {
 			return
 		}
+		// Not sure why this is needed but I guess sometimes as a malicious proxy you only
+		// proxy client OR server side?
+		message = Rewrite(message)
 		err := WriteMessage(client, message)
 		if err != nil {
 			return
